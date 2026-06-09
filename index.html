@@ -394,29 +394,42 @@ SET SANTODOMINGO, 370000" style="width: 100%; padding: 10px; border-radius: 6px;
             
             // Cargar productos desde Google Sheets usando CSV
             function loadProductsFromGoogleSheets() {
-                showStatus('Cargando productos desde Google Sheets...');
-                
-                // URL para exportar la hoja específica como CSV
-                const csvUrl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(SHEET_NAME)}`;
-                
-                // Usar un proxy para evitar problemas de CORS
-                const proxyUrl = `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(csvUrl)}`;
-                
-               const url = "https://api.codetabs.com/v1/proxy?quest=https://docs.google.com/spreadsheets/d/1oztN07-29Fkp05OP1wsAUHhVSo-ftgvsqmBNvx3jRvQ/export?format=csv&gid=576808176";
+    showStatus('Cargando productos desde Google Sheets...');
 
-fetch("https://script.google.com/macros/s/AKfycbyEN5YfShY87f-eyuiR10-y3IJO0XYX8yCuxHUxVi8kgCmm3nwH9HoM4AYPrHfaPG5KkQ/exec")
-  .then(response => response.json())
-  .then(data => {
-    console.log("Datos:", data);
+    fetch("https://script.google.com/macros/s/AKfycbyEN5YfShY87f-eyuiR10-y3IJO0XYX8yCuxHUxVi8kgCmm3nwH9HoM4AYPrHfaPG5KkQ/exec")
+        .then(response => response.json())
+        .then(data => {
+            console.log("Datos:", data);
 
-    const products = data.map(item => ({
-      referencia: item["Referencia"],
-      talla: item["Talla"],
-      precio: item["Precio Nuevo Paralelo y Multimarcas"]
-    }));
+            const products = data.map(item => ({
+                ref: item["Referencia"],
+                name: item["Referencia"],
+                price: item["Precio Nuevo Paralelo y Multimarcas"]
+            }));
 
-    console.log("Productos:", products);
+            if (!products.length) {
+                throw new Error("No hay productos válidos");
+            }
 
+            productSelect.innerHTML = '<option value="">-- Seleccione un producto --</option>';
+
+            products.forEach(product => {
+                const option = document.createElement('option');
+                option.value = product.ref;
+                option.textContent = `${product.ref} - $${formatPrice(product.price)}`;
+                option.dataset.name = product.name;
+                option.dataset.price = product.price;
+                productSelect.appendChild(option);
+            });
+
+            showStatus(`${products.length} productos cargados correctamente`);
+        })
+        .catch(error => {
+            console.error("Error:", error);
+            showStatus('Error: ' + error.message, true);
+            loadExampleData();
+        });
+}
     // tu lógica aquí
   })
   .catch(error => {

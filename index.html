@@ -404,10 +404,18 @@ SET SANTODOMINGO, 370000" style="width: 100%; padding: 10px; border-radius: 6px;
                 
                const url = "https://api.codetabs.com/v1/proxy?quest=https://docs.google.com/spreadsheets/d/1oztN07-29Fkp05OP1wsAUHhVSo-ftgvsqmBNvx3jRvQ/export?format=csv&gid=576808176";
 
-fetch(url)
-  .then(response => response.text())
-  .then(csvData => {
-    console.log(csvData);
+fetch("https://script.google.com/macros/s/AKfycbyEN5YfShY87f-eyuiR10-y3IJO0XYX8yCuxHUxVi8kgCmm3nwH9HoM4AYPrHfaPG5KkQ/exec")
+  .then(res => res.json())
+  .then(data => {
+    console.log(data);
+
+    const products = data; // ya viene en JSON
+
+    // tu lógica aquí
+  })
+  .catch(error => {
+    console.error("Error:", error);
+  });
 
     const products = [];
     const rows = csvData.split('\n');

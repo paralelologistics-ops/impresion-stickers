@@ -402,11 +402,11 @@ SET SANTODOMINGO, 370000" style="width: 100%; padding: 10px; border-radius: 6px;
                 // Usar un proxy para evitar problemas de CORS
                 const proxyUrl = `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(csvUrl)}`;
                 
-                fetch(proxyUrl)
-                    .then(response => {
-                        if (!response.ok) {
-                            throw new Error('No se pudo acceder a la hoja de cálculo. Asegúrate de que sea pública.');
-                        }
+                fetch("https://script.google.com/macros/s/AKfycbyEN5YfShY87f-eyuiR10-y3IJO0XYX8yCuxHUxVi8kgCmm3nwH9HoM4AYPrHfaPG5KkQ/exec")
+  .then(res => res.json())
+  .then(data => {
+    console.log(data);
+  });
                         return response.text();
                     })
                     .then(csvData => {

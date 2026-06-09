@@ -408,8 +408,8 @@ SET SANTODOMINGO, 370000" style="width: 100%; padding: 10px; border-radius: 6px;
     console.log(data);
   });
                         return response.text();
-                    })
-                    .then(csvData => {
+                    }
+            .then(csvData => {
                         const products = [];
                         const rows = csvData.split('\n');
                         

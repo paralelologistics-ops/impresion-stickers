@@ -297,11 +297,10 @@
             <h3>Instrucciones de uso:</h3>
             <ol>
                 <li>Selecciona el <strong>Modo de Distribución</strong> para elegir cuántos productos diferentes vas a combinar en la hoja.</li>
-                <li>Haz clic en "Cargar Productos" para obtener los datos desde Google Sheets automáticamente.</li>
+                <li>Haz clic en "Cargar Productos" para obtener los datos desde tu API privada.</li>
                 <li>Selecciona las referencias correspondientes en cada una de las listas desplegables generadas.</li>
                 <li>Haz clic en "Generar Hoja Completa" para crear el lote exacto de etiquetas distribuidas.</li>
-                <li>Usa el botón "Imprimir Solo Etiquetas" para mandar a producción mediante tu navegador sin que salgan los menús.</li>
-                <li>Si necesitas reiniciar el diseño de la página, haz clic en "Limpiar Hoja".</li>
+                <li>Usa el botón "Imprimir Solo Etiquetas" para mandar a impresión.</li>
             </ol>
         </div>
         
@@ -318,7 +317,8 @@
             </div>
             
             <div id="slots-container" style="grid-column: 1 / -1; display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px;">
-                </div>
+                <!-- Se inyectan automáticamente desde JavaScript -->
+            </div>
             
             <div id="custom-fields" style="grid-column: 1 / -1; display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
                 <div class="control-group">
@@ -334,7 +334,7 @@
         
         <div class="buttons">
             <button id="load-products" class="btn-primary">Cargar Productos</button>
-            <button id="generate-sheet" class="btn-secondary">Generar Hoja Completa (60 etiquetas)</button>
+            <button id="generate-sheet" class="btn-secondary">Generar Hoja Completa</button>
             <button id="print-btn" class="btn-secondary">Imprimir Solo Etiquetas</button>
             <button id="clear-btn" class="btn-danger">Limpiar Hoja</button>
         </div>
@@ -355,10 +355,11 @@ SET SANTODOMINGO, 370000" style="width: 100%; padding: 10px; border-radius: 6px;
         </div>
         
         <div class="sheet" id="label-sheet">
-            </div>
+            <!-- Las etiquetas se generarán aquí -->
+        </div>
         
         <footer>
-            <p>Generador de Etiquetas v3.0 - Multi-producto - Conectado a Google Sheets - 60 etiquetas/hoja</p>
+            <p>Generador de Etiquetas v3.1 - Conexión Directa API Privada - 60 etiquetas/hoja</p>
         </footer>
     </div>
 
@@ -379,14 +380,8 @@ SET SANTODOMINGO, 370000" style="width: 100%; padding: 10px; border-radius: 6px;
             const labelSheet = document.getElementById('label-sheet');
             const statusDiv = document.getElementById('status');
             
-            // ID de tu hoja de cálculo
-            const SHEET_ID = '1oztN07-29Fkp05OP1wsAUHhVSo-ftgvsqmBNvx3jRvQ';
-            const SHEET_NAME = 'precioscostos';
-            
-            // Variable global para almacenar el catálogo descargado
             let allProducts = [];
             
-            // Mostrar mensaje de estado
             function showStatus(message, isError = false) {
                 statusDiv.textContent = message;
                 statusDiv.className = isError ? 'status error' : 'status success';
@@ -397,27 +392,23 @@ SET SANTODOMINGO, 370000" style="width: 100%; padding: 10px; border-radius: 6px;
                 }, 5000);
             }
             
-            // Función para formatear precios correctamente (con miles)
             function formatPrice(price) {
                 const number = parseInt(price.toString().replace(/\D/g, ''), 10);
                 return isNaN(number) ? '0' : number.toLocaleString('es-CO');
             }
             
-            // Renderizar dinámicamente las listas según la distribución elegida
             function renderProductSlots() {
                 slotsContainer.innerHTML = '';
                 const mode = distributionMode.value;
                 const parts = mode.split('-');
                 const numSlots = parseInt(parts[0], 10);
                 
-                // Los campos de texto libre solo aplican si se imprime 1 solo producto masivo
                 if (numSlots === 1) {
                     customFields.style.display = 'grid';
                 } else {
                     customFields.style.display = 'none';
                 }
                 
-                // Creamos los selectores según el número solicitado
                 for (let i = 1; i <= numSlots; i++) {
                     const div = document.createElement('div');
                     div.className = 'control-group';
@@ -448,62 +439,46 @@ SET SANTODOMINGO, 370000" style="width: 100%; padding: 10px; border-radius: 6px;
                 }
             }
             
-            // Cargar productos desde Google Sheets usando CSV
+            // CONEXIÓN CORREGIDA: Usando Apps Script en lugar del Proxy
             function loadProductsFromGoogleSheets() {
-                showStatus('Cargando productos desde Google Sheets...');
+                showStatus('Conectando con tu API privada...');
                 
-                const csvUrl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(SHEET_NAME)}`;
-                const proxyUrl = `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(csvUrl)}`;
+                // === ¡ALTO! DEBES REEMPLAZAR LA SIGUIENTE LÍNEA ===
+                const scriptUrl = 'https://script.google.com/macros/s/AKfycbydMUhfLuux2NJYyE4N2GmWE4sdHjAl1hxs4dnn7HtNI_040Im10QlohyG2QFP6VU-bdA/exec'; 
+                // ===================================================
+
+                if (scriptUrl === 'PEGA_TU_URL_AQUI_ENTRE_LAS_COMILLAS') {
+                    showStatus('Error Crítico: No has configurado la URL de tu API en el código (Línea 268).', true);
+                    return;
+                }
                 
-                fetch(proxyUrl)
+                fetch(scriptUrl)
                     .then(response => {
                         if (!response.ok) {
-                            throw new Error('No se pudo acceder a la hoja de cálculo. Asegúrate de que sea pública.');
+                            throw new Error('Error al conectar con la base de datos.');
                         }
-                        return response.text();
+                        return response.json();
                     })
-                    .then(csvData => {
-                        const products = [];
-                        const rows = csvData.split('\n');
-                        
-                        for (let i = 1; i < rows.length; i++) {
-                            const row = rows[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
-                            
-                            if (row.length >= 4) {
-                                const ref = row[0] ? row[0].replace(/"/g, '').trim() : '';
-                                const price = row[3] ? row[3].replace(/"/g, '').trim() : '';
-                                
-                                if (ref && price) {
-                                    const cleanPrice = price.replace(/[^\d,.]/g, '').replace(',', '');
-                                    
-                                    if (!isNaN(cleanPrice) && cleanPrice !== '') {
-                                        products.push({
-                                            ref: ref,
-                                            name: ref,
-                                            price: cleanPrice
-                                        });
-                                    }
-                                }
-                            }
+                    .then(products => {
+                        if (products.error) {
+                            throw new Error(products.error);
                         }
                         
-                        if (products.length === 0) {
+                        if (!products || products.length === 0) {
                             throw new Error('No se encontraron productos válidos en la hoja');
                         }
                         
                         allProducts = products;
                         renderProductSlots();
-                        
-                        showStatus(`${allProducts.length} productos cargados correctamente desde Google Sheets`);
+                        showStatus(`${allProducts.length} productos cargados de forma segura.`);
                     })
                     .catch(error => {
-                        console.error('Error al cargar los productos:', error);
+                        console.error('Error al cargar:', error);
                         showStatus('Error: ' + error.message, true);
                         loadExampleData();
                     });
             }
             
-            // Cargar datos de ejemplo en caso de fallo de red
             function loadExampleData() {
                 const exampleProducts = [
                     { ref: "Zofya Top Miami Velvet", name: "Zofya Top Miami Velvet", price: 150000 },
@@ -516,10 +491,9 @@ SET SANTODOMINGO, 370000" style="width: 100%; padding: 10px; border-radius: 6px;
                 
                 allProducts = exampleProducts;
                 renderProductSlots();
-                showStatus('Datos de ejemplo cargados (error al acceder a Google Sheets)', true);
+                showStatus('Datos de ejemplo cargados (Fallo de conexión)', true);
             }
             
-            // Entrada de datos manual
             function loadManualData() {
                 const manualText = manualData.value.trim();
                 if (!manualText) {
@@ -556,7 +530,6 @@ SET SANTODOMINGO, 370000" style="width: 100%; padding: 10px; border-radius: 6px;
                 showStatus(`${allProducts.length} productos cargados desde entrada manual`);
             }
             
-            // Generar la hoja calculando el ciclo exacto por producto
             function generateFullSheet() {
                 const mode = distributionMode.value;
                 const parts = mode.split('-');
@@ -566,7 +539,6 @@ SET SANTODOMINGO, 370000" style="width: 100%; padding: 10px; border-radius: 6px;
                 const slotSelects = document.querySelectorAll('.product-slot-select');
                 const selectedProducts = [];
                 
-                // Recolectar datos de las listas desplegables activas
                 for (let i = 0; i < slotSelects.length; i++) {
                     const select = slotSelects[i];
                     const selectedOption = select.options[select.selectedIndex];
@@ -579,7 +551,6 @@ SET SANTODOMINGO, 370000" style="width: 100%; padding: 10px; border-radius: 6px;
                     let name = selectedOption.dataset.name;
                     let price = selectedOption.dataset.price;
                     
-                    // Modificación manual exclusiva para el modo básico de 1 artículo
                     if (numSlots === 1) {
                         if (customName.value.trim() !== '') name = customName.value.trim();
                         if (customPrice.value.trim() !== '') price = customPrice.value.trim();
@@ -588,10 +559,8 @@ SET SANTODOMINGO, 370000" style="width: 100%; padding: 10px; border-radius: 6px;
                     selectedProducts.push({ name: name, price: price });
                 }
                 
-                // Limpiar área de impresión anterior
                 labelSheet.innerHTML = '';
                 
-                // Inyectar el bloque correspondiente por cada producto hasta completar 60
                 selectedProducts.forEach(product => {
                     for (let i = 0; i < labelsPerProduct; i++) {
                         const label = document.createElement('div');
@@ -614,7 +583,6 @@ SET SANTODOMINGO, 370000" style="width: 100%; padding: 10px; border-radius: 6px;
                 showStatus(`Hoja generada: ${numSlots} producto(s) con ${labelsPerProduct} etiquetas c/u`);
             }
             
-            // Eventos de control
             distributionMode.addEventListener('change', renderProductSlots);
             loadButton.addEventListener('click', loadProductsFromGoogleSheets);
             loadManualButton.addEventListener('click', loadManualData);
@@ -635,7 +603,6 @@ SET SANTODOMINGO, 370000" style="width: 100%; padding: 10px; border-radius: 6px;
                 }
             });
             
-            // Inicializar estructuras base al cargar la pantalla
             renderProductSlots();
             loadProductsFromGoogleSheets();
         });

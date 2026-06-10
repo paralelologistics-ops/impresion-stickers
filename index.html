@@ -436,59 +436,7 @@ SET SANTODOMINGO, 370000" style="width: 100%; padding: 10px; border-radius: 6px;
                         // Cargar datos de ejemplo como fallback en caso de que todo falle
                         loadExampleData();
                     });
-            
-                        // Omitir la primera fila (encabezados)
-                        for (let i = 1; i < rows.length; i++) {
-                            // Manejar celdas que puedan contener comas
-                            const row = rows[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
-                            
-                            if (row.length >= 4) {
-                                // Columna A (índice 0): Referencia (nombre del producto)
-                                // Columna D (índice 3): Precio Nuevo Paralelo y Multimarcas
-                                const ref = row[0] ? row[0].replace(/"/g, '').trim() : '';
-                                const price = row[3] ? row[3].replace(/"/g, '').trim() : '';
-                                
-                                // Solo agregar si tenemos ambos valores
-                                if (ref && price) {
-                                    // Limpiar el precio (quitar caracteres no numéricos excepto puntos y comas)
-                                    const cleanPrice = price.replace(/[^\d,.]/g, '').replace(',', '');
-                                    
-                                    if (!isNaN(cleanPrice) && cleanPrice !== '') {
-                                        products.push({
-                                            ref: ref,
-                                            name: ref, // Usamos la referencia como nombre
-                                            price: cleanPrice
-                                        });
-                                    }
-                                }
-                            }
-                        }
-                        
-                        if (products.length === 0) {
-                            throw new Error('No se encontraron productos válidos en la hoja');
-                        }
-                        
-                        // Llenar el selector de productos
-                        productSelect.innerHTML = '<option value="">-- Seleccione un producto --</option>';
-                        products.forEach(product => {
-                            const option = document.createElement('option');
-                            option.value = product.ref;
-                            option.textContent = `${product.ref} - $${formatPrice(product.price)}`;
-                            option.dataset.name = product.name;
-                            option.dataset.price = product.price;
-                            productSelect.appendChild(option);
-                        });
-                        
-                        showStatus(`${products.length} productos cargados correctamente desde Google Sheets`);
-                    })
-                    .catch(error => {
-                        console.error('Error al cargar los productos:', error);
-                        showStatus('Error: ' + error.message, true);
-                        
-                        // Cargar datos de ejemplo como fallback
-                        loadExampleData();
-                    });
-                        
+            }                        
             // Cargar datos de ejemplo
             function loadExampleData() {
                 const exampleProducts = [
